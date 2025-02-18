@@ -48,7 +48,13 @@ const getRealEstateData = async (coordinates) => {
     throw new Error("Invalid response structure");
   }
 
-  return result.response.body.items.item;
+  const realEstateData = result.response.body.items.item;
+  console.log("Real Estate Data:", realEstateData); // 디버깅을 위한 로그 추가
+
+  // realEstateData가 객체일 경우 배열로 변환
+  const realEstateArray = Array.isArray(realEstateData) ? realEstateData : [realEstateData];
+
+  return realEstateArray;
 };
 
 router.get("/search", async (req, res) => {
@@ -57,7 +63,12 @@ router.get("/search", async (req, res) => {
     console.log(`Received address: ${address}`);
     const coordinates = await getCoordinates(address);
     const realEstateData = await getRealEstateData(coordinates);
-    res.json(realEstateData);
+    const enrichedData = realEstateData.map((item) => ({
+      ...item,
+      latitude: coordinates.y,
+      longitude: coordinates.x,
+    }));
+    res.json(enrichedData);
   } catch (error) {
     console.error("Error fetching data:", error);
     res.status(500).json({ error: "Failed to fetch data" });
