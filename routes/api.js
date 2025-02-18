@@ -1,5 +1,6 @@
 import express from "express";
 import axios from "axios";
+import xml2js from "xml2js";
 
 const router = express.Router();
 
@@ -15,19 +16,39 @@ const getCoordinates = async (address) => {
     headers: { Authorization: `KakaoAK ${process.env.KAKAO_REST_API_KEY}` },
     params: { query: address },
   });
+  console.log("Kakao API response:", response.data); // Log the API response for debugging
+  if (response.data.documents.length === 0) {
+    throw new Error("No results found for the given address");
+  }
   return response.data.documents[0].address;
 };
 
 // 실거래가 데이터를 가져오는 함수
 const getRealEstateData = async (coordinates) => {
-  const response = await axios.get("https://api.example.com/real-estate", {
-    params: {
-      serviceKey: process.env.PUBLIC_DATA_API_KEY,
-      lat: coordinates.y,
-      lng: coordinates.x,
-    },
-  });
-  return response.data;
+  const response = await axios.get(
+    "https://apis.data.go.kr/1613000/RTMSDataSvcAptTrade/getRTMSDataSvcAptTrade",
+    {
+      params: {
+        serviceKey: process.env.PUBLIC_DATA_API_KEY, // 인코딩된 인증키 사용
+        LAWD_CD: "11110",
+        DEAL_YMD: "202407",
+        pageNo: 1,
+        numOfRows: 1,
+      },
+    }
+  );
+
+  console.log("Raw Response Data:", response.data); // 응답 데이터 로그 추가
+
+  // JSON 응답을 직접 처리
+  const result = response.data;
+  console.log("Parsed JSON:", result); // 변환된 JSON 로그 추가
+
+  if (!result.response || !result.response.body || !result.response.body.items) {
+    throw new Error("Invalid response structure");
+  }
+
+  return result.response.body.items.item;
 };
 
 router.get("/search", async (req, res) => {
