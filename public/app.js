@@ -9,13 +9,16 @@ document.getElementById("addressForm").addEventListener("submit", function (even
       resultsDiv.innerHTML = "";
       const mapContainer = document.getElementById("map");
       const mapOption = {
-        center: new kakao.maps.LatLng(data[0].latitude, data[0].longitude),
+        center: new kakao.maps.LatLng(data.coordinates.latitude, data.coordinates.longitude),
         level: 3,
       };
       const map = new kakao.maps.Map(mapContainer, mapOption);
 
-      data.forEach((item) => {
-        const markerPosition = new kakao.maps.LatLng(item.latitude, item.longitude);
+      data.realEstateData.forEach((item) => {
+        const markerPosition = new kakao.maps.LatLng(
+          data.coordinates.latitude,
+          data.coordinates.longitude
+        );
         const marker = new kakao.maps.Marker({
           position: markerPosition,
         });
